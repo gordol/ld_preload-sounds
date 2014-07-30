@@ -53,13 +53,13 @@ void* malloc(size_t size)
 	return p;
 }
 
-void* read(int fd, void * data, size_t count)
+ssize_t read(int fd, void * data, size_t count)
 {
-	static void* (*real_read)(int, void*, size_t) = NULL;
+	static ssize_t (*real_read)(int, void*, size_t) = NULL;
 	if (!real_read)
 		real_read= dlsym(RTLD_NEXT, "read");
-	void *p = real_read(fd, data, count);
-	gen_square_wave(44100, CLAMP(count, 20, 20000), CLAMP(sizeof(data), 100, 1700), 0.7);
+	ssize_t p = real_read(fd, data, count);
+	gen_square_wave(44100, CLAMP(count, 20, 20000), CLAMP(p, 100, 1700), 0.7);
 	return p;
 }
 
