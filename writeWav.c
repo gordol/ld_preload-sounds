@@ -10,6 +10,19 @@
 
 static FILE* f = NULL;
 static volatile inside_malloc = 0;
+int noread = 0;
+int nomalloc = 0;
+
+static int configure() {
+	if (f == NULL) {
+		char fd = 1;
+		if (getenv("writeWav_fd")) { fd = atoi(getenv("writeWav_fd")); }
+		f = fdopen(fd, "a");
+		
+		if(getenv("writeWav_noread"))   noread   = atoi(getenv("writeWav_noread"));
+		if(getenv("writeWav_nomalloc")) nomalloc = atoi(getenv("writeWav_nomalloc"));
+	}
+}
 
 static int gen_square_wave(int sample_rate, int frequency, int duration, float amplitude)
 {
@@ -17,11 +30,7 @@ static int gen_square_wave(int sample_rate, int frequency, int duration, float a
 	int tone_midpoint = sample_rate / frequency / 2;
 	int sample        = -(1 << (13 - 1)) * amplitude;
 
-	if (f == NULL) {
-		char fd = 1;
-		if (getenv("writeWav_fd")) { fd = atoi(getenv("writeWav_fd")); }
-		f = fdopen(fd, "a");
-	}
+	
 	if (f == NULL) return -1;
 
 	int i;
@@ -55,8 +64,9 @@ void* malloc(size_t size)
 
 	void *p = real_malloc(size);
 	
-	if (!inside_malloc) {
+	if (!nomalloc && !inside_malloc) {
 		inside_malloc = 1;
+		configure();
 	
 		int ticks = clock();
 		if(ticks > 0){
@@ -76,6 +86,9 @@ void* read(int fd, void * data, size_t count)
 	if (!real_read)
 		real_read= dlsym(RTLD_NEXT, "read");
 	void *p = real_read(fd, data, count);
-	gen_square_wave(44100, CLAMP(count, 20, 20000), CLAMP(sizeof(data), 100, 1700), 0.7);
+	configure();
+	if (!noread) {
+		gen_square_wave(44100, CLAMP(count, 20, 20000), CLAMP(sizeof(data), 100, 1700), 0.7);
+	}
 	return p;
 }
