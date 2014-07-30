@@ -11,7 +11,7 @@
 static FILE* f = NULL;
 static volatile inside_malloc = 0;
 
-int gen_square_wave(int sample_rate, int frequency, int duration, float amplitude)
+static int gen_square_wave(int sample_rate, int frequency, int duration, float amplitude)
 {
 	int samples       = sample_rate * duration / 1000;
 	int tone_midpoint = sample_rate / frequency / 2;
