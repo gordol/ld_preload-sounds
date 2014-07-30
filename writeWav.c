@@ -5,7 +5,6 @@
 #include <dlfcn.h>
 
 #include <math.h>
-#include <sndfile.h>
 #include <malloc.h>
 
 int gen_square_wave(int sample_rate, int frequency, int duration, float amplitude)
