@@ -1,0 +1,42 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "Usage writeWav program [arguments]"
+    exit 1
+fi
+
+LIBNAME=writeWav.so
+
+if LD_PRELOAD=$LIBNAME /bin/true 2>&1 | grep -q ignored; then
+    tryLib() {
+        if [ -z "$LIB" ]; then
+            #echo "Trying LIB $1"
+            if [ -e "$1" ]; then
+                #echo "Setting LIB to $1"
+                LIB="$1"
+            fi
+        fi
+    }
+
+    tryLib /usr/local/lib/$LIBNAME
+    tryLib /usr/lib/$LIBNAME
+    tryLib ./$LIBNAME
+    if [ -z "$LIB" ]; then
+        echo "$LIBNAME not found. Specify LIB environment variable to force $LIBNAME location" >&2
+        exit 1
+    fi
+else
+    #echo "$LIBNAME is already available for preload"
+    LIB=$LIBNAME
+fi
+
+if [ -z "$LD_PRELOAD" ]; then
+    LD_PRELOAD=$LIB
+else
+    LD_PRELOAD=$LIB:$LD_PRELOAD
+fi
+
+export LD_PRELOAD
+
+writeWav_fd=33 "$@"  33> >(aplay --file-type raw --rate=44100 --channels=1 --format=S16 > /dev/null 2> /dev/null)
+#writeWav_fd=33 "$@"  33> >(cat > /dev/null)
