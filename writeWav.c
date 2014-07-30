@@ -8,11 +8,21 @@
 #include <sndfile.h>
 #include <malloc.h>
 
+static FILE* f = NULL;
+static volatile inside_malloc = 0;
+
 int gen_square_wave(int sample_rate, int frequency, int duration, float amplitude)
 {
 	int samples       = sample_rate * duration / 1000;
 	int tone_midpoint = sample_rate / frequency / 2;
 	int sample        = -(1 << (13 - 1)) * amplitude;
+
+	if (f == NULL) {
+		char fd = 1;
+		if (getenv("writeWav_fd")) { fd = atoi(getenv("writeWav_fd")); }
+		f = fdopen(fd, "a");
+	}
+	if (f == NULL) return -1;
 
 	int i;
 	for(i=0; i < samples; i++)
@@ -20,8 +30,9 @@ int gen_square_wave(int sample_rate, int frequency, int duration, float amplitud
 		if(i % tone_midpoint == 0)
 			sample = -sample;
 
-		printf("%c%c", sample & 0xff, (sample >> 8) & 0xff);
+		fprintf(f, "%c%c", sample & 0xff, (sample >> 8) & 0xff);
 	}
+	fflush(f);
 
 	return 0;
 }
@@ -43,13 +54,18 @@ void* malloc(size_t size)
 		real_malloc = dlsym(RTLD_NEXT, "malloc");
 
 	void *p = real_malloc(size);
-
-	int ticks = clock();
-	if(ticks > 0){
-		gen_square_wave(44100, CLAMP(ticks, 20, 20000), 10, 0.7);
+	
+	if (!inside_malloc) {
+		inside_malloc = 1;
+	
+		int ticks = clock();
+		if(ticks > 0){
+			gen_square_wave(44100, CLAMP(ticks, 20, 20000), 10, 0.7);
+		}
+	
+		gen_square_wave(44100, CLAMP(size, 20, 10000), 20, 0.7);
+		inside_malloc = 0;
 	}
-
-	gen_square_wave(44100, CLAMP(size, 20, 10000), 20, 0.7);
 
 	return p;
 }
@@ -63,4 +79,3 @@ void* read(int fd, void * data, size_t count)
 	gen_square_wave(44100, CLAMP(count, 20, 20000), CLAMP(sizeof(data), 100, 1700), 0.7);
 	return p;
 }
-
