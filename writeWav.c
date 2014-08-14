@@ -61,12 +61,7 @@ void* malloc(size_t size)
   if (!__malloc_data.nomalloc && !inside_malloc)
   {
     inside_malloc = true;
-
-    clock_t ticks_now = clock();
-    if (ticks_now != (clock_t) -1) {
-      gen_square_wave(MALLOC_WAVE_TICKS_PARAMS(ticks_now - __malloc_data.ticks_start));
-    }
-
+    gen_square_wave(MALLOC_WAVE_TICKS_PARAMS(size, clock() - __malloc_data.ticks_start));
     gen_square_wave(MALLOC_WAVE_PARAMS(size));
     inside_malloc = false;
   }
