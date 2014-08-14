@@ -7,7 +7,7 @@ fi
 
 LIBNAME=writeWav.so
 
-if LD_PRELOAD=$LIBNAME /bin/true 2>&1 | grep -q ignored; then
+if LC_MESSAGE=C LD_PRELOAD="$LIBNAME" /bin/true 2>&1 | grep -qFe ignored; then
     tryLib() {
         if [ -z "$LIB" ]; then
             #echo "Trying LIB $1"
