@@ -1,7 +1,14 @@
+CC = gcc
+CPPFLAGS += -pipe
+CFLAGS += -std=gnu99
+LDFLAGS += -fPIC -shared -Wl,--no-as-needed
+LIBS = -ldl
+
+
 all: writeWav.so
 
 writeWav.so: writeWav.c
-	${CC} ${CFLAGS} ${LDFLAGS} -fPIC -shared -Wl,--no-as-needed -ldl -o writeWav.so writeWav.c
+	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${LIBS} -o $@ $^
 
 DESTDIR=/
 prefix=/usr/local
