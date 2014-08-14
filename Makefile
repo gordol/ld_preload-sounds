@@ -7,7 +7,7 @@ LIBS = -ldl
 
 all: writeWav.so
 
-writeWav.so: writeWav.c
+writeWav.so: writeWav.c support.c | support.h
 	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${LIBS} -o $@ $^
 
 DESTDIR=/

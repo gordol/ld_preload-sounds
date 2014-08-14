@@ -1,95 +1,96 @@
-#define _GNU_SOURCE
 #include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
-#include <dlfcn.h>
+#include <unistd.h>
+#include "support.h"
 
-#include <math.h>
-#include <malloc.h>
 
-static FILE* f = NULL;
-static volatile inside_malloc = 0;
-int noread = 0;
-int nomalloc = 0;
+/*
+ * Wave generation parameters for malloc calls.
+ *
+ * size - allocated memory size (input)
+ * parameter 1 - wave frequency in Hertz; should be clamped to a sane range
+ *   (e. g. 20-20000 Hz) with CLAMP_u(freq, min, max)
+ * parameter 2 - wave duration in milliseconds
+ * parameter 3 - wave amplitude (0.0-1.0)
+ */
+#define MALLOC_WAVE_PARAMS(size) \
+  CLAMP_u(size, 20u, 10000u), 20, 0.7f
 
-static int configure() {
-	if (f == NULL) {
-		char fd = 1;
-		if (getenv("writeWav_fd")) { fd = atoi(getenv("writeWav_fd")); }
-		f = fdopen(fd, "a");
-		
-		if(getenv("writeWav_noread"))   noread   = atoi(getenv("writeWav_noread"));
-		if(getenv("writeWav_nomalloc")) nomalloc = atoi(getenv("writeWav_nomalloc"));
-	}
-}
+#define MALLOC_WAVE_TICKS_PARAMS(ticks) \
+  CLAMP_u(ticks, 20u, 20000u), 10, 0.7f
 
-static int gen_square_wave(int sample_rate, int frequency, int duration, float amplitude)
-{
-	int samples       = sample_rate * duration / 1000;
-	int tone_midpoint = sample_rate / frequency / 2;
-	int sample        = -(1 << (13 - 1)) * amplitude;
+#define READ_WAVE_PARAMS(requested, returned) \
+  CLAMP_u(requested, 20u, 20000u), CLAMP_u(returned, 100, 1700), 0.7f
 
-	
-	if (f == NULL) return -1;
 
-	int i;
-	for(i=0; i < samples; i++)
-	{
-		if(i % tone_midpoint == 0)
-			sample = -sample;
+// foward declarations ================================================
 
-		fprintf(f, "%c%c", sample & 0xff, (sample >> 8) & 0xff);
-	}
-	fflush(f);
+void* malloc(size_t size);
 
-	return 0;
-}
+ssize_t read(int fd, void * data, size_t count);
 
-#define MIN(A,B) ({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __a : __b; })
-#define MAX(A,B) ({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __b : __a; })
+static void gen_square_wave(unsigned frequency, unsigned duration, float amplitude);
 
-#define CLAMP(x, low, high) ({\
-  __typeof__(x) __x = (x); \
-  __typeof__(low) __low = (low);\
-  __typeof__(high) __high = (high);\
-  __x > __high ? __high : (__x < __low ? __low : __x);\
-  })
+static void __gen_square_wave_impl(unsigned samples, unsigned tone_midpoint, sample_t sample);
+
+
+// implementations ====================================================
 
 void* malloc(size_t size)
 {
-	static void* (*real_malloc)(size_t) = NULL;
-	if (!real_malloc)
-		real_malloc = dlsym(RTLD_NEXT, "malloc");
+  static volatile bool inside_malloc = false;
 
-	void *p = real_malloc(size);
-	
-	if (!nomalloc && !inside_malloc) {
-		inside_malloc = 1;
-		configure();
-	
-		int ticks = clock();
-		if(ticks > 0){
-			gen_square_wave(44100, CLAMP(ticks, 20, 20000), 10, 0.7);
-		}
-	
-		gen_square_wave(44100, CLAMP(size, 20, 10000), 20, 0.7);
-		inside_malloc = 0;
-	}
+  void *p = __malloc_data.real_malloc(size);
 
-	return p;
+  if (!__malloc_data.nomalloc && !inside_malloc)
+  {
+    inside_malloc = true;
+
+    clock_t ticks_now = clock();
+    if (ticks_now != (clock_t) -1) {
+      gen_square_wave(MALLOC_WAVE_TICKS_PARAMS(ticks_now - __malloc_data.ticks_start));
+    }
+
+    gen_square_wave(MALLOC_WAVE_PARAMS(size));
+    inside_malloc = false;
+  }
+
+  return p;
 }
+
 
 ssize_t read(int fd, void * data, size_t count)
 {
-	static ssize_t (*real_read)(int, void*, size_t) = NULL;
-	if (!real_read)
-		real_read= dlsym(RTLD_NEXT, "read");
+  ssize_t p = __read_data.real_read(fd, data, count);
+  if (!__read_data.noread) {
+    gen_square_wave(READ_WAVE_PARAMS(count, p));
+  }
+  return p;
+}
 
-	ssize_t p = real_read(fd, data, count);
-	configure();
-	if (!noread) {
-		//gen_square_wave(44100, CLAMP(count, 20, 20000), CLAMP(sizeof(data), 100, 1700), 0.7);
-		gen_square_wave(44100, CLAMP(count, 20, 20000), CLAMP(p, 100, 1700), 0.7);
-	}
-	return p;
+
+static inline
+void gen_square_wave(unsigned frequency, unsigned duration, float amplitude)
+{
+  assert(amplitude >= 0.f && amplitude <= 1.f);
+
+  __gen_square_wave_impl(
+    SAMPLING_RATE * duration / 1000,
+    MAX(SAMPLING_RATE / 2 / frequency, 1u),
+    (sample_t)((float) -(1 << (13 - 1)) * amplitude));
+}
+
+
+static void __gen_square_wave_impl(unsigned samples, unsigned tone_midpoint, sample_t sample)
+{
+  assert(__wave_out != NULL);
+  assert(samples == 0 || tone_midpoint != 0);
+
+  for (unsigned i = 0; i != samples; i++)
+  {
+    if(i % tone_midpoint == 0)
+      sample = (sample_t) -sample;
+
+    fwrite(&sample, sizeof(sample), 1, __wave_out);
+  }
+  fflush(__wave_out);
 }
