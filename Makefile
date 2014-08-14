@@ -10,6 +10,9 @@ all: writeWav.so
 writeWav.so: writeWav.c support.c | support.h
 	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${LIBS} -o $@ $^
 
+clean:
+	rm -f writeWav.so writeWav.o support.o
+
 DESTDIR=/
 prefix=/usr/local
 
