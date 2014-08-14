@@ -4,20 +4,37 @@
 
 
 /*
- * Wave generation parameters for malloc calls.
+ * General wave generation parameters.
  *
- * size - allocated memory size (input)
  * parameter 1 - wave frequency in Hertz; should be clamped to a sane range
  *   (e. g. 20-20000 Hz) with CLAMP_u(freq, min, max)
  * parameter 2 - wave duration in milliseconds
  * parameter 3 - wave amplitude (0.0-1.0)
  */
+
+/*
+ * Size-based wave generatrion for malloc() calls.
+ *
+ * size - allocated memory size in bytes
+ */
 #define MALLOC_WAVE_PARAMS(size) \
   CLAMP_u(size, 20u, 10000u), 20, 0.7f
 
-#define MALLOC_WAVE_TICKS_PARAMS(ticks) \
+/*
+ * Size and runtime based wave generation for malloc() calls.
+ *
+ * size - see above
+ * ticks - number of consumed CPU clock ticks since program start
+ */
+#define MALLOC_WAVE_TICKS_PARAMS(size, ticks) \
   CLAMP_u(ticks, 20u, 20000u), 10, 0.7f
 
+/*
+ * Size based wave generation for read() calls.
+ *
+ * requested - requested amount of bytes to read
+ * returned - actual amounts of bytes read
+ */
 #define READ_WAVE_PARAMS(requested, returned) \
   CLAMP_u(requested, 20u, 20000u), CLAMP_u(returned, 100, 1700), 0.7f
 
