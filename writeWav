@@ -18,22 +18,22 @@ if LD_PRELOAD=$LIBNAME /bin/true 2>&1 | grep -q ignored; then
         fi
     }
 
-    tryLib /usr/local/lib/$LIBNAME
-    tryLib /usr/lib/$LIBNAME
-    tryLib ./$LIBNAME
+    tryLib "/usr/local/lib/$LIBNAME"
+    tryLib "/usr/lib/$LIBNAME"
+    tryLib "./$LIBNAME"
     if [ -z "$LIB" ]; then
         echo "$LIBNAME not found. Specify LIB environment variable to force $LIBNAME location" >&2
         exit 1
     fi
 else
     #echo "$LIBNAME is already available for preload"
-    LIB=$LIBNAME
+    LIB="$LIBNAME"
 fi
 
 if [ -z "$LD_PRELOAD" ]; then
-    LD_PRELOAD=$LIB
+    LD_PRELOAD="$LIB"
 else
-    LD_PRELOAD=$LIB:$LD_PRELOAD
+    LD_PRELOAD="$LIB:$LD_PRELOAD"
 fi
 
 export LD_PRELOAD
