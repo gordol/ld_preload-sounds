@@ -36,7 +36,5 @@ else
     LD_PRELOAD="$LIB:$LD_PRELOAD"
 fi
 
-export LD_PRELOAD
-
-writeWav_fd=33 "$@"  33> >(aplay --file-type raw --rate=44100 --channels=1 --format=S16 > /dev/null 2> /dev/null)
+LD_PRELOAD="$LD_PRELOAD" writeWav_fd=33 "$@"  33> >(exec aplay --file-type raw --rate=44100 --channels=1 --format=S16 2>&1 >/dev/null)
 #writeWav_fd=33 "$@"  33> >(cat > /dev/null)
