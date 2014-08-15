@@ -54,15 +54,21 @@ static void __gen_square_wave_impl(unsigned samples, unsigned half_period_length
 
 void* malloc(size_t size)
 {
-  static volatile bool inside_malloc = false;
+  static __thread volatile bool inside_malloc = false;
 
-  void *p = __malloc_data.real_malloc(size);
+  void *const p = __malloc_data.real_malloc(size);
 
   if (!__malloc_data.nomalloc && !inside_malloc)
   {
     inside_malloc = true;
-    gen_square_wave(MALLOC_WAVE_TICKS_PARAMS(size, clock() - __malloc_data.ticks_start));
+
+    flockfile(__wave_out);
+    gen_square_wave(MALLOC_WAVE_TICKS_PARAMS(size,
+      clock() - __malloc_data.ticks_start));
     gen_square_wave(MALLOC_WAVE_PARAMS(size));
+    fflush_unlocked(__wave_out);
+    funlockfile(__wave_out);
+
     inside_malloc = false;
   }
 
@@ -72,10 +78,16 @@ void* malloc(size_t size)
 
 ssize_t read(int fd, void * data, size_t count)
 {
-  ssize_t p = __read_data.real_read(fd, data, count);
-  if (!__read_data.noread) {
+  const ssize_t p = __read_data.real_read(fd, data, count);
+
+  if (!__read_data.noread)
+  {
+    flockfile(__wave_out);
     gen_square_wave(READ_WAVE_PARAMS(count, p));
+    fflush_unlocked(__wave_out);
+    funlockfile(__wave_out);
   }
+
   return p;
 }
 
@@ -109,7 +121,7 @@ static void __gen_square_wave_impl(unsigned samples, unsigned half_period_length
     const unsigned half_period_end =
         MIN(half_period_start + half_period_length, samples);
     for (unsigned i = half_period_start; i != half_period_end; i++)
-      fwrite(&sample, sizeof(sample), 1, __wave_out);
+      fwrite_unlocked(&sample, sizeof(sample), 1, __wave_out);
 
     #ifndef SAMPLING_FORMAT_FLOAT
       sample = (sample_t)(IS_SIGNED(sample_t) ? -sample : ~sample);
@@ -117,6 +129,4 @@ static void __gen_square_wave_impl(unsigned samples, unsigned half_period_length
       sample = -sample;
     #endif
   }
-
-  fflush(__wave_out);
 }
