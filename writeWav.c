@@ -86,8 +86,8 @@ void gen_square_wave(unsigned frequency, unsigned duration, float amplitude)
   assert(amplitude >= 0.f && amplitude <= 1.f);
 
   __gen_square_wave_impl(
-    SAMPLING_RATE * duration / 1000,
-    MAX(SAMPLING_RATE / 2 / frequency, 1u),
+    DIV_ROUND(SAMPLING_RATE * duration, 1000),
+    MAX(DIV_ROUND(SAMPLING_RATE / 2, frequency), 1u),
     (sample_t)((float) INTTYPE_MAX(sample_t) * amplitude));
 }
 
