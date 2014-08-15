@@ -88,7 +88,7 @@ void gen_square_wave(unsigned frequency, unsigned duration, float amplitude)
   __gen_square_wave_impl(
     SAMPLING_RATE * duration / 1000,
     MAX(SAMPLING_RATE / 2 / frequency, 1u),
-    (sample_t)((float) -(1 << (13 - 1)) * amplitude));
+    (sample_t)((float) INTTYPE_MAX(sample_t) * amplitude));
 }
 
 
@@ -96,6 +96,7 @@ static void __gen_square_wave_impl(unsigned samples, unsigned tone_midpoint, sam
 {
   assert(__wave_out != NULL);
   assert(samples == 0 || tone_midpoint != 0);
+  sample = (sample_t) -sample;
 
   for (unsigned i = 0; i != samples; i++)
   {

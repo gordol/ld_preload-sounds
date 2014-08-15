@@ -23,6 +23,9 @@
 typedef SAMPLING_FORMAT sample_t;
 
 
+#define IS_SIGNED(type) ((type) -1 < 0)
+#define INTTYPE_MAX(type) (IS_SIGNED(type) ? ~((type) 1 << (sizeof(type) * CHAR_BIT - 1)) : ~(type) 0)
+
 #define MIN(A,B) ({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __a : __b; })
 #define MAX(A,B) ({ __typeof__(A) __a = (A); __typeof__(B) __b = (B); __a < __b ? __b : __a; })
 #define CLAMP(x, low, high) MIN(MAX(x, low), high)
