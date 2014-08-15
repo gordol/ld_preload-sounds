@@ -105,7 +105,7 @@ static void __gen_square_wave_impl(unsigned samples, unsigned half_period_length
         MIN(half_period_start + half_period_length, samples);
     for (unsigned i = half_period_start; i != half_period_end; i++)
       fwrite(&sample, sizeof(sample), 1, __wave_out);
-    sample = (sample_t) -sample;
+    sample = (sample_t)(IS_SIGNED(sample_t) ? -sample : ~sample);
   }
 
   fflush(__wave_out);
