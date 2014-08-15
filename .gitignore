@@ -1,1 +1,4 @@
-writeWav.so
+*.o
+*.so
+
+*.pro.user
