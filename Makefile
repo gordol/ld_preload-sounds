@@ -7,8 +7,8 @@ LIBS = -ldl
 
 all: writeWav.so
 
-writeWav.so: writeWav.c support.c | support.h
-	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${LIBS} -o $@ $^
+writeWav.so: writeWav.c support.h support.c
+	${CC} ${CPPFLAGS} ${CFLAGS} ${LDFLAGS} ${LIBS} -o $@ $(filter-out %.h,$^)
 
 clean:
 	rm -f writeWav.so writeWav.o support.o
