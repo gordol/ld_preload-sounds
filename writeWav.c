@@ -88,7 +88,12 @@ void gen_square_wave(unsigned frequency, unsigned duration, float amplitude)
   __gen_square_wave_impl(
     DIV_ROUND(SAMPLING_RATE * duration, 1000),
     MAX(DIV_ROUND(SAMPLING_RATE / 2, frequency), 1u),
-    (sample_t)((float) INTTYPE_MAX(sample_t) * amplitude));
+    #ifndef SAMPLING_FORMAT_FLOAT
+      (sample_t)((float) INTTYPE_MAX(sample_t) * amplitude)
+    #else
+      amplitude
+    #endif
+    );
 }
 
 
@@ -105,7 +110,12 @@ static void __gen_square_wave_impl(unsigned samples, unsigned half_period_length
         MIN(half_period_start + half_period_length, samples);
     for (unsigned i = half_period_start; i != half_period_end; i++)
       fwrite(&sample, sizeof(sample), 1, __wave_out);
-    sample = (sample_t)(IS_SIGNED(sample_t) ? -sample : ~sample);
+
+    #ifndef SAMPLING_FORMAT_FLOAT
+      sample = (sample_t)(IS_SIGNED(sample_t) ? -sample : ~sample);
+    #else
+      sample = -sample;
+    #endif
   }
 
   fflush(__wave_out);

@@ -111,7 +111,11 @@ static struct wave_header_info wave_header = { -1, {
 
   byteswap32('fmt '), // format chunk ID
   16, // format chunk size = 16
+#ifndef SAMPLING_FORMAT_FLOAT
   1, // format type (PCM = 1)
+#else
+  3, // format type (IEEE float = 3)
+#endif
   CHANNELS, // channel count (mono = 1)
   SAMPLING_RATE, // sampling rate
   SAMPLING_RATE * CHANNELS * sizeof(sample_t), // byte rate

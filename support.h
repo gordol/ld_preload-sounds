@@ -8,16 +8,17 @@
 
 
 #if CHAR_BIT != 8
-#error "Unsupported byte length"
+  #error "Unsupported byte length"
 #endif
 
-
-#ifndef SAMPLING_FORMAT
-#define SAMPLING_FORMAT int16_t
+#ifdef SAMPLING_FORMAT_FLOAT
+  #define SAMPLING_FORMAT float
+#elif !defined(SAMPLING_FORMAT)
+  #define SAMPLING_FORMAT int16_t
 #endif
 
 #ifndef SAMPLING_RATE
-#define SAMPLING_RATE 44100
+  #define SAMPLING_RATE 44100
 #endif
 
 typedef SAMPLING_FORMAT sample_t;
