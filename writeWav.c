@@ -47,7 +47,7 @@ ssize_t read(int fd, void * data, size_t count);
 
 static void gen_square_wave(unsigned frequency, unsigned duration, float amplitude);
 
-static void __gen_square_wave_impl(unsigned samples, unsigned tone_midpoint, sample_t sample);
+static void __gen_square_wave_impl(unsigned samples, unsigned half_period_length, sample_t sample);
 
 
 // implementations ====================================================
@@ -92,18 +92,21 @@ void gen_square_wave(unsigned frequency, unsigned duration, float amplitude)
 }
 
 
-static void __gen_square_wave_impl(unsigned samples, unsigned tone_midpoint, sample_t sample)
+static void __gen_square_wave_impl(unsigned samples, unsigned half_period_length, sample_t sample)
 {
   assert(__wave_out != NULL);
-  assert(samples == 0 || tone_midpoint != 0);
-  sample = (sample_t) -sample;
+  assert(samples == 0 || half_period_length != 0);
 
-  for (unsigned i = 0; i != samples; i++)
+  for (unsigned half_period_start = 0;
+       half_period_start < samples;
+       half_period_start += half_period_length)
   {
-    if(i % tone_midpoint == 0)
-      sample = (sample_t) -sample;
-
-    fwrite(&sample, sizeof(sample), 1, __wave_out);
+    const unsigned half_period_end =
+        MIN(half_period_start + half_period_length, samples);
+    for (unsigned i = half_period_start; i != half_period_end; i++)
+      fwrite(&sample, sizeof(sample), 1, __wave_out);
+    sample = (sample_t) -sample;
   }
+
   fflush(__wave_out);
 }
