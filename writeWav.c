@@ -54,7 +54,7 @@ static void __gen_square_wave_impl(unsigned samples, unsigned half_period_length
 
 void* malloc(size_t size)
 {
-  static __thread volatile bool inside_malloc = false;
+  static __thread bool inside_malloc = false;
 
   void *const p = __malloc_data.real_malloc(size);
 
