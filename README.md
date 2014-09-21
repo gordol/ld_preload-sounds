@@ -3,6 +3,8 @@ ld_preload sounds
 
 Generates WAV output by hooking malloc() and read(). Adding support for other calls should be pretty easy, pull-requests are much welcomed!
 
+Also, it should go without saying... but I will say it anyway... __this is experimental___. Hooking memory and read calls could break things horribly, I accidentally blew out a buch of my vim configs at one point while first starting to write this becuase I thought it would be neat to hook the editor while making more changes, and yeah... I broke it. So consider yourself warned... I do not with to be responsible if you break your system, lose files, etc... Be sure you have backups of any files touched by the programs you're running through this, you have backups anyway, don't you? Don't you?
+
 To build, run ```make```, you know the drill. ;)
 
 To try it out, run the ```writeWav``` script with the program and parameters you with to experiment with.
