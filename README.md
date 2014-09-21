@@ -1,3 +1,8 @@
+ld_preload sounds
+=================
+
+Generates WAV output by hooking malloc() and read(). Adding support for other calls should be pretty easy, pull-requests are much welcomed!
+
 To build, run ```make```, you know the drill. ;)
 
 To try it out, run the ```writeWav``` script with the program and parameters you with to experiment with.
