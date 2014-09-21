@@ -1,12 +1,9 @@
-To build, run ```make```:
+To build, run ```make```, you know the drill. ;)
 
 To try it out, run the ```writeWav``` script with the program and parameters you with to experiment with.
-
-Otherwise, if you wish, you may LD_PRELOAD writeWav.so manually.
-
 A wav file will be created in the current directory with a name of the current timestamp if you run with writeWav.
 
-Otherwise, if you preload manually there are some environment vars that you should be aware of:
+Otherwise, if you wish, you may LD_PRELOAD writeWav.so manually. If you preload manually, however, there are some environment vars that you should be aware of:
 
 __Required__:
 *    writeWav_out (default: none)
