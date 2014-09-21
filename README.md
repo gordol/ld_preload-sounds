@@ -63,3 +63,7 @@ You can listen to some examples of the output here:
 * https://soundcloud.com/glowdon/jingy-compiler-1
 * https://soundcloud.com/glowdon/the-sounds-of-malloc
 * https://soundcloud.com/glowdon/malloc-read-hook-self-compile
+
+
+
+Many thanks to [@davidfoerster](https://github.com/davidfoerster) and others for the forks and improvements!
