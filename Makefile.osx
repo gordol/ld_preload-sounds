@@ -1,0 +1,17 @@
+all: writeWav.dylib
+
+writeWav.dylib: writeWav.c support.h support.c
+	gcc -flat_namespace -dynamiclib -o $@ $(filter-out %.h,$^)
+
+clean:
+	rm -f writeWav.dylib writeWav.o support.o
+
+DESTDIR=/
+prefix=/usr/local
+
+
+install: writeWav.dylib
+	mkdir -p ${DESTDIR}/${prefix}/lib
+	mkdir -p ${DESTDIR}/${prefix}/bin
+	install -m 644 writeWav.dylib ${DESTDIR}/${prefix}/lib/
+	install -m 755 writeWav.osx ${DESTDIR}/${prefix}/bin/

@@ -1,0 +1,41 @@
+#!/bin/bash
+
+if [ -z "$1" ]; then
+    echo "No program specified."
+    echo "Usage: writeWav [program] [arguments]"
+    exit 1
+fi
+
+LIBNAME=writeWav.dylib
+
+if LC_MESSAGE=C DYLD_INSERT_LIBRARIES="$LIBNAME" /bin/true 2>&1 | grep -qFe ignored; then
+    tryLib() {
+        if [ -z "$LIB" ]; then
+            #echo "Trying LIB $1"
+            if [ -e "$1" ]; then
+                #echo "Setting LIB to $1"
+                LIB="$1"
+            fi
+        fi
+    }
+
+    tryLib "/usr/local/lib/$LIBNAME"
+    tryLib "/usr/lib/$LIBNAME"
+    tryLib "./$LIBNAME"
+    if [ -z "$LIB" ]; then
+        echo "$LIBNAME not found. Specify LIB environment variable to force $LIBNAME location" >&2
+        exit 1
+    fi
+else
+    #echo "$LIBNAME is already available for preload"
+    LIB="$LIBNAME"
+fi
+
+if [ -z "$DYLD_INSERT_LIBRARIES" ]; then
+    DYLD_INSERT_LIBRARIES="$LIB"
+else
+    DYLD_INSERT_LIBRARIES="$LIB:$DYLD_INSERT_LIBRARIES"
+fi
+
+env DYLD_FORCE_FLAT_NAMESPACE=1 DYLD_INSERT_LIBRARIES="$DYLD_INSERT_LIBRARIES" writeWav_out=`date +"%s.wav"` "$@" 
+

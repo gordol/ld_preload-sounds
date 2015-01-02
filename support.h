@@ -6,6 +6,10 @@
 #include <limits.h>
 #include <assert.h>
 
+#ifdef __APPLE__
+  #define fwrite_unlocked fwrite
+  #define fflush_unlocked fflush
+#endif
 
 #if CHAR_BIT != 8
   #error "Unsupported byte length"
